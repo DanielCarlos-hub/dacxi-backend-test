@@ -1,0 +1,56 @@
+version: "3.7"
+
+services:
+    # image project
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        working_dir: /var/www/
+        volumes:
+            - ./:/var/www
+        depends_on:
+            - redis
+        networks:
+            - dacxi_test
+
+    # nginx
+    nginx:
+        image: nginx:alpine
+        restart: unless-stopped
+        ports:
+            - "8100:80"
+        volumes:
+            - ./:/var/www
+            - ./docker/nginx/:/etc/nginx/conf.d/
+        networks:
+            - dacxi_test
+
+    # db mysql
+    mysql:
+        image: mysql:5.7.22
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: dacxi_test
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_PASSWORD: root
+            MYSQL_USER: root
+        volumes:
+            - ./docker/mysql/data:/var/lib/mysql
+        ports:
+            - "3388:3306"
+        networks:
+            - dacxi_test
+
+    # redis
+    redis:
+        image: redis:latest
+        ports:
+            - "6379:6379"
+        networks:
+            - dacxi_test
+
+networks:
+    dacxi_test:
+        driver: bridge
